@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lagou.dao.CourseContentMapper">
+
+    <resultMap type="com.lagou.domain.CourseSection" id="SectionAndLessonResultMap">
+        <id column="id" property="id"/>
+        <result column="course_id" property="courseId"/>
+        <result column="section_name" property="sectionName"/>
+        <result column="description" property="description"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_de" property="isDe"/>
+        <result column="order_num" property="orderNum"/>
+
+        <collection property="lessonList" ofType="com.lagou.domain.CourseLesson">
+        <id column="lessonId" property="id"/>
+        <result column="course_id" property="courseId"/>
+        <result column="section_id" property="sectionId"/>
+        <result column="theme" property="theme"/>
+        <result column="duration" property="duration"/>
+        <result column="is_free" property="isFree"/>
+        <result column="order_num" property="orderNum"/>
+        <result column="status" property="status"/>
+        </collection>
+</resultMap>
+
+    <!--根据课程id查询关联的章节信息以及关联的课时信息-->
+    <select id="findSectionAndLessionByCourseId" parameterType="int" resultMap="SectionAndLessonResultMap">
+        SELECT
+          cs.*,
+          cl.id lessonid,
+          cl.course_id,
+          cl.section_id,
+          cl.theme,
+          cl.duration,
+          cl.create_time,
+          cl.update_time,
+          cl.is_del,
+          cl.order_num,
+          cl.status
+        FROM course_section cs
+        LEFT JOIN course_lesson cl
+        ON cl.section_id = cs.id
+        WHERE cs.course_id = #{id}
+        ORDER BY cs.order_num
+    </select>
+
+    <!--回显课程信息-->
+    <select id="findCourseByCourseId" parameterType="int" resultType="com.lagou.domain.Course">
+        select id,course_name from course where id = #{courseId}
+    </select>
+
+    <!--保存章节-->
+    <insert id="saveSection" parameterType="com.lagou.domain.CourseSection">
+        INSERT INTO course_section(
+        course_id,
+        section_name,
+        description,
+        order_num,
+        STATUS,
+        create_time,
+        update_time
+        )VALUES(#{courseId},#{sectionName},#{description},#{orderNum},
+        #{status},#{createTime},#{updateTime});
+</insert>
+
+    <update id="updateSection" parameterType="com.lagou.domain.CourseSection">
+        UPDATE course_section
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="sectionName != null and sectionName != ''">
+                section_name = #{sectionName},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="orderNum != null and orderNum != '' or orderNum == 0">
+                order_num = #{orderNum},
+            </if>
+            <if test="updateTime != null">
+                update_time=#{updateTime}
+            </if>
+        </trim>
+        <where>
+            <if test="id != null and id != '' ">id = #{id}</if>
+        </where>
+    </update>
+
+    <!-- 修改章节状态 -->
+    <update id="updateSectionStatus"    parameterType="com.lagou.domain.CourseSection">
+        UPDATE course_section set
+        status = #{status},
+        update_time = #{updateTime}
+        WHERE id = #{id}
+</update>
+
+    <!-- 添加课时 -->
+    <insert id="saveLesson" parameterType="com.lagou.domain.CourseLesson">
+        INSERT INTO course_lesson (
+        id,course_id,
+        section_id,
+        theme,
+        duration,
+        is_free,
+        order_num,
+        create_time,
+        update_time
+        )VALUES(#{id},#{courseId},#{sectionId},#{theme},#{duration},#{isFree},
+        #{orderNum},#{createTime},#{updateTime});
+</insert>
+
+    <update id="updateLesson" parameterType="com.lagou.domain.CourseLesson">
+        UPDATE course_section
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="lessonName != null and lessonName != ''">
+                lesson_name = #{lessonName},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if test="orderNum != null and orderNum != '' or orderNum == 0">
+                order_num = #{orderNum},
+            </if>
+            <if test="updateTime != null">
+                update_time=#{updateTime}
+            </if>
+        </trim>
+        <where>
+            <if test="id != null and id != '' ">id = #{id}</if>
+        </where>
+    </update>
+
+
+</mapper>
